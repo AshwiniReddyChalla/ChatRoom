@@ -1,0 +1,77 @@
+<div class="chat">
+    <div class="chat-messages"></div>
+    <textarea class="chat-textarea" placeholder="Type your message"></textarea>
+    <form action="/homepage" method="post">
+        <button type="submit" class="chat-logout"> Logout </button>
+    </form>
+</div>
+<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+<script>
+    (function(){
+        
+        var textarea = document.querySelector('.chat textarea'),
+        chatName = document.querySelector('.chat-name'),
+        messages = document.querySelector('.chat-messages');
+
+        try{
+            var socket = io.connect('http://localhost:8080');
+        }
+        catch(e){
+            console.log("connection failed");
+        }
+
+        if(socket){
+            socket.on('showmessage', function(data){
+                if(data && data.length > 0){
+                    data.forEach(function(entry){
+                        var message = document.createElement('div');
+                        message.setAttribute('class', 'chat-message');
+
+                        var messageName = document.createElement('div');
+                        messageName.setAttribute('class', 'chat-messagename');
+
+                        var messageDate = document.createElement('div');
+                        messageDate.setAttribute('class', 'chat-messagedate');
+
+                        var linebreak = document.createElement('div');
+                        linebreak.setAttribute('class', 'chat-clearalign');
+
+                        var linebreak2 = document.createElement('div');
+                        linebreak2.setAttribute('class', 'chat-clearalign');
+
+                        var messageContent = document.createElement('div');
+                        messageContent.setAttribute('class', 'chat-messagecontent');
+
+                        messageName.textContent = entry.name ;
+                        messageDate.textContent = entry.dateTime;
+                        messageContent.textContent = entry.message;
+                        linebreak.textContent ="\n";
+
+                        message.appendChild(messageName);
+                        message.appendChild(messageDate);
+                        message.appendChild(linebreak);
+                        message.appendChild(messageContent);
+                        message.appendChild(linebreak2);
+                        
+                        messages.appendChild(message);
+                        messages.insertBefore(message, messages.firstChild);
+                    })
+                }
+            });
+
+            textarea.addEventListener('keydown', function(event){
+
+                if(event.which === 13 && event.shiftKey === false){
+                    socket.emit('newmessage', {
+                        name: '{{username}}',
+                        message: this.value,
+                        dateTime: new Date().toLocaleString()
+                    });
+
+                    event.preventDefault();
+                    this.value = '';
+                }
+            });
+        }
+    })();
+</script>
